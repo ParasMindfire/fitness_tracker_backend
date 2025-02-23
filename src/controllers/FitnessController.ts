@@ -8,7 +8,7 @@ import { sendEmail } from "../services/nodeMailer";
 // Fetch all fitness goals for the authenticated user
 const getAllFitnessGoals = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { id } = req.body.auth;
+        const { id } =  (req as any).auth;
         const fitnessGoals = await fitnessGoalsRepo.getAllFitnessGoals(id);
 
         if (!fitnessGoals.length) {
@@ -24,7 +24,7 @@ const getAllFitnessGoals = async (req: Request, res: Response, next: NextFunctio
 // Create a new fitness goal for the authenticated user
 const createFitnessGoal = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { id } = req.body.auth;
+        const { id } =  (req as any).auth;
         const { goal_type, target_value, current_progress, start_date, end_date } = req.body;
 
         if (!goal_type || !target_value || !current_progress || !start_date || !end_date) {

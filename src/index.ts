@@ -65,3 +65,5 @@ const db = async () => {
 
 // Initialize database connection
 db();
+
+export default app;

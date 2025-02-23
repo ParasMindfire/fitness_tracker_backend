@@ -3,32 +3,24 @@ import jwt from "jsonwebtoken"
 
 
 // Middleware for authorization
-const authorisation=async(req:Request,res:Response,next:NextFunction)=>{
+const authorisation = async (req: Request, res: Response, next: NextFunction) => {
     try {
-
-        const auth:any=req.headers.authorization;
-
-        // console.log("auth",auth);
-
-        if(!auth || !auth.startsWith("Bearer ")){
-            throw new Error("Token Not Provided Properly")
+        const authHeader: any = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            throw new Error("Token not provided properly");
         }
-
-        const token=auth.split(" ")[1];
-
-        // console.log("token",token);
+        const token = authHeader.split(" ")[1];
 
         try {
-            const decoded=jwt.verify(token,process.env.JWT_SECRET as string);
-
-            req.body.auth=decoded;
+            const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+            (req as any).auth = decoded;
             next();
         } catch (error) {
-            throw new Error("Inavalid or expired token");
+            throw new Error("Invalid or expired token");
         }
     } catch (error) {
         next(error);
     }
-}
+};
 
 export default authorisation;

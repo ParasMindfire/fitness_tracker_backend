@@ -61,22 +61,37 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
             throw new NotFoundError("Enter Correct Email");
         }
 
-        const validPassword = bcrypt.compare(password, user[0].password);
+        const validPassword = bcrypt.compareSync(password, user[0].password);
         if (!validPassword) {
             throw new UnauthorizedError("Invalid Credentials");
         }
 
-        const token = jwt.sign(
+        // Generate Access Token (expires in 15 minutes)
+        const accessToken = jwt.sign(
             { id: user[0].user_id, email: user[0].email },
-            process.env.JWT_SECRET! as string,
-            { expiresIn: "8h" }
+            process.env.JWT_SECRET as string,
+            { expiresIn: "15m" }
         );
 
-        return res.status(200).json({ status: 200, message: "Log in successfully", token, user });
+        // Generate Refresh Token (expires in 7 days) using a separate secret if desired
+        const refreshToken = jwt.sign(
+            { id: user[0].user_id, email: user[0].email },
+            process.env.JWT_REFRESH_SECRET as string,
+            { expiresIn: "7d" }
+        );
+
+        return res.status(200).json({ 
+            status: 200, 
+            message: "Log in successfully", 
+            accessToken, 
+            refreshToken, 
+            user 
+        });
     } catch (error) {
         next(error);
     }
 };
+
 
 // Retrieve a single user by their ID
 export const getSingleUser = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
@@ -100,17 +115,19 @@ export const getSingleUser = async (req: Request, res: Response, next: NextFunct
 // Update the password of an existing user
 export const updateUser = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { email } = req.body.auth;
+        const { email } = (req as any).auth;
         const { newPassword } = req.body;
 
         if (!newPassword) {
             throw new BadRequestError("New Password was not entered");
         }
 
-        const user: any = await UserRespository.getUserByEmail(email);
+        const [user]: any = await UserRespository.getUserByEmail(email);
         if (!user.length) {
             throw new NotFoundError("User not found");
         }
+
+        console.log("user ",user);
 
         const oldPassword: any = user[0].password;
         if (bcrypt.compareSync(newPassword, oldPassword)) {
@@ -131,7 +148,7 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
 export const deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
         const { email } = req.body;
-        const user = await UserRespository.getUserByEmail(email);
+        const [user] = await UserRespository.getUserByEmail(email);
         if (!user.length) {
             throw new NotFoundError("The person to delete was not found");
         }
@@ -146,7 +163,7 @@ export const deleteUser = async (req: Request, res: Response, next: NextFunction
 
 export const getUserProfile = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const {email} = req.body.auth;
+        const { email } = (req as any).auth;
 
         const [user] = await UserRespository.getUserByEmail(email);
         if (!user) throw new NotFoundError("User not found");
@@ -184,6 +201,31 @@ export const uploadProfilePhoto = async (req: Request, res: Response, next: Next
         next(error);
     }
 };
+
+
+export const refreshAccessToken = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            throw new BadRequestError("Refresh token not provided");
+        }
+
+        // Verify refresh token using the refresh secret
+        const decoded: any = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET as string);
+
+        // Generate a new access token
+        const newAccessToken = jwt.sign(
+            { id: decoded.id, email: decoded.email },
+            process.env.JWT_SECRET as string,
+            { expiresIn: "15m" }
+        );
+
+        return res.status(200).json({ accessToken: newAccessToken });
+    } catch (error) {
+        next(error);
+    }
+};
+
 
 
 

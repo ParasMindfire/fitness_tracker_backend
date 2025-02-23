@@ -24,7 +24,7 @@ const getAllWorkoutByAll = async (req: Request, res: Response, next: NextFunctio
 //Fetch all workouts for a specific user.
 const getAllWorkoutByUser = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { id } = req.body.auth;
+        const { id } = (req as any).auth;
         const workouts = await workoutRepo.getWorkoutsByUser(id);
 
         if (!workouts.length) {
@@ -41,7 +41,7 @@ const getAllWorkoutByUser = async (req: Request, res: Response, next: NextFuncti
 const createWorkout = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
 
-        const { id } = req.body.auth;
+        const { id } = (req as any).auth;
         const { exercise_type, duration, calories_burned, workout_date } = req.body;
 
         if (!exercise_type || !duration || !calories_burned || !workout_date) {
@@ -87,7 +87,7 @@ const getSingleWorkout = async (req: Request, res: Response, next: NextFunction)
 const updateWorkout = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
 
-        const { id } = req.body.auth;
+        const { id } = (req as any).auth;
         const { workout_id, exercise_type, duration, calories_burned, workout_date } = req.body;
 
         if (!workout_id || !exercise_type || !duration || !calories_burned || !workout_date) {
@@ -108,7 +108,7 @@ const updateWorkout = async (req: Request, res: Response, next: NextFunction): P
 const deleteWorkout = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
 
-        const { id } = req.body.auth;
+        const { id } = (req as any).auth;
         const { workout_id } = req.body;
 
         if (!workout_id) {
@@ -127,7 +127,7 @@ const deleteWorkout = async (req: Request, res: Response, next: NextFunction): P
 // Fetch current workout streak for a user
 const getWorkoutStreak = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { id } = req.body.auth;
+        const { id } = (req as any).auth;
         console.log("id ", id);
 
         const workouts = await workoutRepo.getWorkoutsByUser(id);
@@ -169,7 +169,7 @@ const getWorkoutStreak = async (req: Request, res: Response, next: NextFunction)
 // Fetch workouts for a specific month
 const getMonthlyWorkouts = async (req: Request, res: Response, next: NextFunction): Promise<any> => {
     try {
-        const { id } = req.body.auth;
+        const { id } = (req as any).auth;
         const { year, month } = req.query;
 
         console.log("year", year);
